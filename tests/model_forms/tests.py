@@ -1536,6 +1536,26 @@ class ModelChoiceFieldTests(TestCase):
         field = CustomModelChoiceField(Category.objects.all())
         self.assertIsInstance(field.choices, CustomModelChoiceIterator)
 
+    def test_modelchoicefield_26917(self):
+        """
+        #26917 -- Disabled ModelChoiceFields crash in Django 1.10
+        """
+
+        class ModelChoiceForm(forms.ModelForm):
+            author = forms.ModelChoiceField(Author.objects.all(), disabled=True)
+
+            class Meta:
+                model = Book
+                fields = ['title', 'author', 'special_id']
+
+        book = Book.objects.create(author=Writer.objects.create(name='Test writer'))
+        form_data = {
+            'title': 'Test Title',
+            'special_id': 1,
+        }
+        form = ModelChoiceForm(form_data, instance=book)
+        self.assertFalse(form.is_valid())
+
 
 class ModelMultipleChoiceFieldTests(TestCase):
     def setUp(self):
